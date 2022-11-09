@@ -60,7 +60,7 @@ def get_img_transform(from_img, to_img, symmetric=False):
     else:
         return diff_tran, best_w
 
-def generate_goal_img(img, w, x, y):
+def detectPose(img, w, x, y):
     ''' generate goal image in original image frame'''
     center = get_center(img)
     ## move it to the center
