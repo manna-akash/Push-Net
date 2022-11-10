@@ -20,6 +20,26 @@ import logging
 from utilities import *
 
 
+class PushNetInitilization:
+
+    def initilization():
+
+        try:
+            print('\033[1m' +'\033[93m' "Initializing the model...." + '\033[0m')
+            initialize_start = time.time()
+            pred = Predictor()
+            initialize_end =time.time()
+            print('\033[1m' +'\033[93m' f"Model Intiliazed Sucessfully in ***{round((initialize_end-initialize_start), 2)} sec***: Good Job <3" + '\033[0m')
+
+        except ValueError:
+            print("MODEL IS NOT INITIALIZED PROPERLY. EXITING......")
+            SystemExit()
+
+        return pred
+        
+
+    
+
 
 class PushController:
     """
@@ -93,7 +113,7 @@ class PushController:
         return actions
 
 
-    def get_best_push(self, Ic):
+    def get_best_push(self, Ic, SAMPLE_ACTION_VIEW=True):
         ''' Input:
                 Ic: current image mask
             Output:
@@ -104,27 +124,21 @@ class PushController:
         _, img_in_curr = cv2.threshold(img_in_curr.copy(), 30, 255, cv2.THRESH_BINARY)
 
         ''' visualize current image '''
-        if CURR_VIS:
-            cv2.imshow('Input Image', img_in_curr)
-            cv2.waitKey(0)
+        # if CURR_VIS:
+        #     cv2.imshow('Input Image', img_in_curr)
+        #     cv2.waitKey(0)
 
         img_in_curr_ = cv2.imread(args.target_pose).astype(np.uint8)[:,:,0]
-        _, img_in_curr_ = cv2.threshold(img_in_curr_.copy(), 30, 255, cv2.THRESH_BINARY)
+        _, img_in_next = cv2.threshold(img_in_curr_.copy(), 30, 255, cv2.THRESH_BINARY)
 
-        ''' generate goal image '''
-        img_in_next = img_in_curr_ #detectPose(img_in_curr_.copy(), 0, 0, 0)
-
-        ''' visualize goal image '''
-        if NEXT_VIS:
-            cv2.imshow('Target Pose', img_in_next)
-            cv2.waitKey(0)
+        
+        # ''' visualize goal image '''
+        # if NEXT_VIS:
+        #     cv2.imshow('Target Pose', img_in_next)
+        #     cv2.waitKey(0)
 
         ''' Sample actions '''
-        start_sample_action =time.time()
         actions = self.sample_action(img_in_curr.copy(), self.num_action)
-        end_sample_action = time.time()
-        total_sample_time = float(end_sample_action -start_sample_action)
-        logging.info("Time taken to sample 1000 actions : %.2f ms" %(end_sample_action-start_sample_action)*1000)
 
         ''' visualize sampled actions '''
         if SAMPLE_VIS:
@@ -151,7 +165,6 @@ class PushController:
 
         action_value_pairs = []
         ##Predicting the best actions from model
-        start_action_time = time.time()
         for i in range(int(num_action_batch)):
             ## keep hidden state the same for all action batches during selection
             if not hidden == None:
@@ -170,19 +183,12 @@ class PushController:
         pack = action_value_pairs.pop(0)
         best_start = pack[0][0] ## best push starting pixel
         best_end = pack[0][1] ## best push ending pixel
-        end_action_time = time.time()
-        total_action_time =float(end_action_time -start_action_time)
 
-        if BEST_VIS:
+        if SAMPLE_ACTION_VIEW == True:
+            cv2.imshow('Input Image', img_in_curr)
+            cv2.imshow('Target Pose', img_in_next)
             self.draw_action(img_in_curr.copy(), best_start, best_end, single=True, sub = None)
 
-        if SAMPLE_ACTIONS:
-            _sub = None
-            for num_act in range(NUM_ACTION_EXECUTE):
-                sub= None#_sub +"_"+str(num_act)
-                start =action_value_pairs[num_act][0][0]
-                end = action_value_pairs[num_act][0][1]
-                self.draw_action(img_in_curr.copy(), start, end, single=False, sub =sub)
 
         ''' execute action '''
         ## TODO: do whatever to execute push action (best_start, best_end)
@@ -209,7 +215,7 @@ class PushController:
         img_3d = img_3d.astype(np.uint8)
 
         cv2.imshow('Best Action to be Taken', img_3d)
-        cv2.imwrite("./results/pushes/"+f"action_{sub}.png", img_3d)
+        cv2.imwrite("./../results/Best_action.png", img_3d)
         if single:
             ## draw the best action
             print('press any key to continue ...')
@@ -219,16 +225,17 @@ class PushController:
             cv2.waitKey(10)
 
 
+
+
+
+
 if __name__=='__main__':
 
     imagePath =("./../input_images/")
-    DARW_ACTIONS= True
+    SAMPLE_ACTION_VIEW= True
 
-    try:
-        pred = Predictor()
-    except ValueError:
-        print("MODEL IS NOT INITIALIZED PROPERLY. EXITING......")
-        SystemExit()
+    pred= PushNetInitilization.initilization()
+
 
     pred_model =PushController(predictor=pred)
 
@@ -236,10 +243,17 @@ if __name__=='__main__':
 
         #Making it BW image
         Ic = cv2.imread(imagePath + image)[:,:,0]
-        Ic = detectPose(Ic, 0, -7, 7)
-        
-        push_vec = pred_model.get_best_push(Ic.copy())
-        print(Fore.GREEN+'\033[1m'+ f"Start coordinates:  ***** {push_vec[0]} ***** & the ending coordinates:  ***** {push_vec[1]} ***** . The angle made {round(math.degrees(math.atan2(push_vec[1][1]-push_vec[0][1], push_vec[1][0]-push_vec[0][0])),2)}˚\n")
+        Ic = detectPose(Ic, 0, -7, 7) # -7, 7 : offset values
+
+
+        prediction_start = time.time()
+        push_vec = pred_model.get_best_push(Ic.copy(),SAMPLE_ACTION_VIEW =SAMPLE_ACTION_VIEW)
+        prediction_end = time.time()
+        predition_time =round(prediction_end - prediction_start, 2)
+        rotation_after_action = round(math.degrees(math.atan2(push_vec[1][1]-push_vec[0][1], push_vec[1][0]-push_vec[0][0])),2)
+
+
+        print(Fore.GREEN+'\033[1m'+ f"\n Start coordinates:  ***** {push_vec[0]} ***** \n the ending coordinates:  ***** {push_vec[1]} ***** .\n The angle made {rotation_after_action}˚\n Model Prediction time {predition_time*1000} ms. \n \n " +'\033[0m')
         
 
 

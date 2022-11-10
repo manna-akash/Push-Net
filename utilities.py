@@ -47,7 +47,7 @@ def to_var(x, volatile=False):
 class Predictor:
     def __init__(self):
         self.bs = args.batch_size
-        model_path = './model'
+        model_path = args.model_path#'./model'
         best_model_name = args.arch[METHOD] + '.pth.tar'
         self.model_path = os.path.join(model_path, best_model_name)
         self.model = self.build_model()
@@ -66,7 +66,7 @@ class Predictor:
                 self.model.cuda()
             self.model.eval()
         except FileNotFoundError:
-            print(Fore.RED+'\033[1m' +"Model file not found. Check the path variable and filename. EXITING.....")
+            print(Fore.RED+'\033[1m' +"Model file not found. Check the path variable and filename. EXITING....." + "\033[0m")
             exit()
 
     def build_model(self):
