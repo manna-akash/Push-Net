@@ -64,7 +64,7 @@ class COM_CNN(nn.Module):
     def init_weight(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                init.xavier_uniform(m.weight, gain=np.sqrt(2.0))
+                init.xavier_uniform_(m.weight, gain=np.sqrt(2.0))
 
     def forward(self, x):
         x = self.conv1(x)
