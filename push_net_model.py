@@ -133,8 +133,8 @@ class COM_net_sim(nn.Module):
 
         ''' squash value between (0, 1)'''
 
-        sim = F.sigmoid(output)
-        com_out = F.sigmoid(com_out)
+        sim = torch.sigmoid(output)#F.sigmoid(output)
+        com_out = torch.sigmoid(com_out)#F.sigmoid(com_out)
 
         ''' pack into sequence for output'''
         sim_pack = pack_padded_sequence(sim.view(bs, -1, SIM_SIZE), lengths, batch_first=True)
@@ -201,7 +201,7 @@ class COM_net_sim_only(nn.Module):
 
         ''' squash value between (0, 1)'''
 
-        sim = F.sigmoid(output)
+        sim = torch.sigmoid(output)#F.sigmoid(output)
 
         ''' pack into sequence for output'''
         sim_pack = pack_padded_sequence(sim.view(bs, -1, SIM_SIZE), lengths, batch_first=True)
@@ -250,7 +250,7 @@ class COM_net_nomem(nn.Module):
 
         ''' squash value between (0, 1)'''
 
-        sim = F.sigmoid(output)
+        sim = torch.sigmoid(output)#F.sigmoid(output)
         ''' pack into sequence for output'''
         sim_pack = pack_padded_sequence(sim.view(bs, -1, SIM_SIZE), lengths, batch_first=True)
 
