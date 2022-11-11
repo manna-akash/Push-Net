@@ -24,5 +24,5 @@ setup(
     packages=find_packages("./"),
     include_package_data=True,
     data_files=data_files,
-    package_data={'PushNet': ['data/target_pose.png']}
+    package_data={'PushNet': ['./data/target_pose.png']}
 )

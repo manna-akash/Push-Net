@@ -13,7 +13,7 @@ method = {"with_COM":"simcom",
           "without_COM" : "sim", 
           "without_memory" : "nomem"}
 
-target_pose = "./target_pose.png"
+target_pose = "./data/target_pose.png"
 
 ### three differetn network architecture for comparison
 arch = {
