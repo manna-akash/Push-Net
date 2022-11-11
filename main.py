@@ -17,7 +17,16 @@ import os
 import time
 import logging
 
+try:
+    import ctypes
+    ctypes.cdll.LoadLibrary("libgomp.so.1")
+
+except:
+    print("Failed to pre-load libgomp library")
+
+
 from utilities import *
+
 
 
 class PushNetInitilization:
