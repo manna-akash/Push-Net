@@ -7,6 +7,10 @@ import os
 import time
 import logging
 from colorama import Fore
+import sys
+
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__))))
+
 
 import config as args
 from img_utils import * 
@@ -33,9 +37,11 @@ BEST_VIS = True # display the best action
 SAMPLE_ACTIONS =True
 NUM_ACTION_EXECUTE =5
 
-logging.basicConfig(format='%(asctime)s %(message)s',filename='pushnet.log', filemode='w', level=logging.INFO)
-print('\033[1m'+f"Input image size {128} 'X' {106}" +'\033[1m')
-print('\033[1m' + "Input image size %.2f MB"%1.1 +'\033[1m')
+# logging.basicConfig(format='%(asctime)s %(message)s',filename='pushnet.log', filemode='w', level=logging.INFO)
+# print('\033[1m'+f"Input image size {128} 'X' {106}" +'\033[1m')
+# print('\033[1m' + "Input image size %.2f MB"%1.1 +'\033[1m')
+
+
 
 
 def to_var(x, volatile=False):
@@ -50,24 +56,26 @@ class Predictor:
         model_path = args.model_path#'./model'
         best_model_name = args.arch[METHOD] + '.pth.tar'
         self.model_path = os.path.join(model_path, best_model_name)
-        self.model = self.build_model()
+        #self.model = self.build_model()
         #calculate time to initialize the model
         start = time.time()
-        self.load_model()
+        #self.load_model()
         end =time.time()
         time_elapsed = float(end -start)
         logging.info("Time taken to intilize the model: %.2f ms"% time_elapsed*1000)
 
-    def load_model(self):
+    def load_model(self, model):
         try:
 
-            self.model.load_state_dict(torch.load(self.model_path)['state_dict'])
+            model.load_state_dict(torch.load(self.model_path)['state_dict'])
             if torch.cuda.is_available():
-                self.model.cuda()
-            self.model.eval()
+                model.cuda()
+            model.eval()
         except FileNotFoundError:
             print(Fore.RED+'\033[1m' +"Model file not found. Check the path variable and filename. EXITING....." + "\033[0m")
             exit()
+        return model
+
 
     def build_model(self):
         if METHOD == 'simcom':
@@ -76,6 +84,26 @@ class Predictor:
             return COM_net_sim_only(self.bs)
         elif METHOD == 'nomem':
             return COM_net_nomem(self.bs)
+
+
+    def initialize(self):
+        try: 
+            print('\033[1m' +'\033[93m' "Initializing the model...." + '\033[0m')
+            initialize_start = time.time()
+            model = self.build_model()
+            model = self.load_model(model=model)
+            initialize_end =time.time()
+            print('\033[1m' +'\033[93m' f"Model Intiliazed Sucessfully in ***{round((initialize_end-initialize_start), 2)} sec***: Good Job <3" + '\033[0m')
+            return model
+        except ValueError:
+            print("MODEL IS NOT INITIALIZED PROPERLY. EXITING......")
+            SystemExit()
+
+
+class evaluation_action:
+    def __init__(self, model):
+        self.model =model
+        self.bs = args.batch_size
 
     def reset_model(self):
         ''' reset the hidden state of LSTM before pushing another new object '''

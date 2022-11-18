@@ -119,7 +119,7 @@ class COM_net_sim(nn.Module):
 
         ''' pack sequence to feed LSTM '''
         lstm_inp = pack_padded_sequence(lstm_inp.view(bs, -1, LSTM_IN_SIZE),
-                lengths, batch_first=True)
+                torch.tensor(lengths).cpu(), batch_first=True)
         lstm_out, self.hidden = self.lstm(lstm_inp, self.hidden)
 
         ''' unpack sequence to feed in linear layer'''
@@ -137,8 +137,8 @@ class COM_net_sim(nn.Module):
         com_out = torch.sigmoid(com_out)#F.sigmoid(com_out)
 
         ''' pack into sequence for output'''
-        sim_pack = pack_padded_sequence(sim.view(bs, -1, SIM_SIZE), lengths, batch_first=True)
-        com_pack = pack_padded_sequence(com_out.view(bs, -1, 2), lengths, batch_first=True)
+        sim_pack = pack_padded_sequence(sim.view(bs, -1, SIM_SIZE), torch.tensor(lengths).cpu(), batch_first=True)
+        com_pack = pack_padded_sequence(com_out.view(bs, -1, 2), torch.tensor(lengths).cpu(), batch_first=True)
 
         return sim_pack, com_pack
 
